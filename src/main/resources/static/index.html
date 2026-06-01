@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hálózati Felügyeleti Rendszer</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        
+        .add-device-form { background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+        .add-device-form input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; flex: 1; }
+        .add-device-form button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .add-device-form button:hover { background-color: #218838; }
+
+        .search-bar { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #007bff; color: white; }
+        .status-online { color: green; font-weight: bold; }
+        .status-offline { color: red; font-weight: bold; }
+        
+        /* ÚJ: Ping gomb stílusa */
+        .ping-btn { background-color: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
+        .ping-btn:hover { background-color: #0056b3; }
+        .ping-btn:disabled { background-color: #cccccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+<div style="background-color: #ffeeba; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3>Készenléti Névsor Kereső</h3>
+        Nézd meg, ki az ügyeletes: 
+        <input type="date" id="onCallDate" onchange="checkOnCall()">
+        
+        <div id="onCallResult" style="margin-top: 10px; font-weight: bold; color: #856404;">
+            </div>
+    </div>
+
+    <h1>Aktív Eszközök Felügyelete</h1>
+    
+    <div class="add-device-form">
+        <input type="text" id="newName" placeholder="Eszköz neve (pl. Miskolc Főkapcsoló)" required>
+        <input type="text" id="newIp" placeholder="IP Cím (pl. 192.168.1.50)" required>
+        <button onclick="addNewDevice()">Hozzáadás</button>
+    </div>
+
+    <input type="text" id="searchInput" class="search-bar" onkeyup="filterTable()" placeholder="Keresés név, IP vagy státusz alapján...">
+
+    <table id="deviceTable">
+        <thead>
+            <tr>
+                <th>Eszköz neve</th>
+                <th>IP Cím</th>
+                <th>Státusz</th>
+                <th>Utolsó ellenőrzés</th>
+                <th>Műveletek</th> </tr>
+        </thead>
+        <tbody id="tableBody">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    async function addNewDevice() {
+        const nameInput = document.getElementById('newName');
+        const ipInput = document.getElementById('newIp');
+        const name = nameInput.value.trim();
+        const ip = ipInput.value.trim();
+
+        if (!name || !ip) {
+            alert("Kérlek, töltsd ki a nevet és az IP címet is!");
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/devices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, ipAddress: ip })
+            });
+
+            if (response.ok) {
+                nameInput.value = '';
+                ipInput.value = '';
+                fetchDevices(); 
+            } else {
+                alert("Hiba történt az eszköz mentésekor.");
+            }
+        } catch (error) {
+            console.error('Hálózati hiba:', error);
+        }
+    }
+
+    async function checkOnCall() {
+        const dateInput = document.getElementById('onCallDate').value;
+        const resultDiv = document.getElementById('onCallResult');
+        
+        if (!dateInput) return;
+
+        try {
+            const response = await fetch(`/api/oncall/${dateInput}`);
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `✅ ${data.date}: <br> Név: ${data.names} <br> Telefon: ${data.phones}`;
+            } else {
+                resultDiv.innerHTML = `❌ Erre a napra (${dateInput}) nincs rögzítve készenlétes.`;
+            }
+        } catch (error) {
+            console.error('Hiba a készenlét lekérdezésekor:', error);
+        }
+    }
+
+
+
+    // ÚJ: Soron kívüli pingelés funkció
+    async function forcePing(id, buttonElement) {
+        // Gomb inaktiválása, amíg tart a ping (max 3 mp)
+        buttonElement.disabled = true;
+        buttonElement.innerText = "Pingelés...";
+
+        try {
+            const response = await fetch(`/api/devices/${id}/ping`, { method: 'POST' });
+            if (response.ok) {
+                fetchDevices(); // Táblázat frissítése, ha megjött az eredmény
+            } else {
+                alert("Hiba történt az eszköz pingelésekor.");
+            }
+        } catch (error) {
+            console.error('Hálózati hiba:', error);
+        } finally {
+            // Gomb visszaállítása
+            buttonElement.disabled = false;
+            buttonElement.innerText = "Kézi Ping";
+        }
+    }
+
+    async function fetchDevices() {
+        try {
+            const response = await fetch('/api/devices');
+            const devices = await response.json();
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = ''; 
+
+            devices.forEach(device => {
+                const row = document.createElement('tr');
+                const statusClass = device.alive ? 'status-online' : 'status-offline';
+                const statusText = device.alive ? 'Online' : 'Offline';
+                const lastChecked = device.lastChecked ? new Date(device.lastChecked).toLocaleTimeString('hu-HU') : 'Folyamatban...';
+
+                // Új: Gomb hozzáadása a sor végéhez
+                row.innerHTML = `
+                    <td>${device.name}</td>
+                    <td>${device.ipAddress}</td>
+                    <td class="${statusClass}">${statusText}</td>
+                    <td>${lastChecked}</td>
+                    <td><button class="ping-btn" onclick="forcePing(${device.id}, this)">Kézi Ping</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Hiba az adatok lekérésekor:', error);
+        }
+    }
+
+    function filterTable() {
+        const input = document.getElementById("searchInput");
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById("deviceTable");
+        const tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) {
+            let rowText = tr[i].textContent || tr[i].innerText;
+            if (rowText.toLowerCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+
+    fetchDevices();
+    setInterval(fetchDevices, 10000);
+</script>
+
+</body>
+</html>
