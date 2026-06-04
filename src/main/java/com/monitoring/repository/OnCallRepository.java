@@ -1,6 +1,7 @@
 package com.monitoring.repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,9 @@ import com.monitoring.model.OnCall;
 
 @Repository
 public interface OnCallRepository extends JpaRepository<OnCall, Long> {
-    // Automatikusan keres dátum alapján az adatbázisban
-    Optional<OnCall> findByDate(LocalDate date);
+    // Frissítéshez: Dátum és Részleg alapján keres
+    Optional<OnCall> findByDateAndDepartment(LocalDate date, String department);
+    
+    // Weblaphoz: Lekéri az összes részleg ügyeletesét egy adott napon
+    List<OnCall> findAllByDate(LocalDate date);
 }

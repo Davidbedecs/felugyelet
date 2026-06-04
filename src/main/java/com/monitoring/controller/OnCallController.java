@@ -1,9 +1,8 @@
 package com.monitoring.controller;
 
 import java.time.LocalDate;
-import java.util.Optional;
+import java.util.List;
 
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,15 +22,14 @@ public class OnCallController {
         this.onCallRepository = onCallRepository;
     }
 
-    // Keresés pontos dátum alapján (pl. /api/oncall/2026-05-31)
     @GetMapping("/{date}")
-    public ResponseEntity<OnCall> getOnCallByDate(
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    public ResponseEntity<List<OnCall>> getOnCallByDate(@PathVariable String date) {
+        LocalDate searchDate = LocalDate.parse(date);
+        List<OnCall> onCalls = onCallRepository.findAllByDate(searchDate);
         
-        Optional<OnCall> onCall = onCallRepository.findByDate(date);
-        
-        // Ha van találat, visszaadjuk, ha nincs, 404 Not Found
-        return onCall.map(ResponseEntity::ok)
-                     .orElseGet(() -> ResponseEntity.notFound().build());
+        if (onCalls.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(onCalls);
     }
 }

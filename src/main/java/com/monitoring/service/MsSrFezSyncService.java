@@ -22,17 +22,17 @@ import com.monitoring.repository.OnCallRepository;
 import jakarta.annotation.PostConstruct;
 
 @Service
-public class OnCallSyncService {
+public class MsSrFezSyncService {
 
     private final OnCallRepository onCallRepository;
 
-    public OnCallSyncService(OnCallRepository onCallRepository) {
+    public MsSrFezSyncService(OnCallRepository onCallRepository) {
         this.onCallRepository = onCallRepository;
     }
 
     @PostConstruct
-    public void syncOnCallDataFromExcel() {
-        System.out.println("--- Visszaállás az eredeti, stabil beolvasóra ---");
+    public void syncFezData() {
+        System.out.println("--- Ms-Sr-Fez Különálló Beolvasó Indul ---");
         try {
             PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
             Resource[] resources = resolver.getResources("classpath*:excels/*készenlét*.xls*");
@@ -41,14 +41,10 @@ public class OnCallSyncService {
                 String filename = resource.getFilename();
                 if (filename == null || filename.startsWith("~$")) continue;
 
-                // BIZTONSÁGI VÉDELEM: Átugorjuk a problémás másik fájlt
-                if (filename.toLowerCase().contains("ms-sr-fez")) {
-                    System.out.println("-> " + filename + " átugrása (csak az eredeti táblázatot olvassuk)");
-                    continue;
-                }
+                if (!filename.toLowerCase().contains("fez")) continue; 
 
-                System.out.println("-> Fájl feldolgozása: " + filename);
-                String department = "Üzemfelügyelet";
+                System.out.println("-> FEZ Fájl feldolgozása: " + filename);
+                String department = "Ms-Sr-Fez";
 
                 try (InputStream is = resource.getInputStream();
                      Workbook workbook = new XSSFWorkbook(is)) {
@@ -62,41 +58,59 @@ public class OnCallSyncService {
                         int year = Integer.parseInt(sheetName.substring(0, 4));
                         int month = Integer.parseInt(sheetName.substring(5, 7));
 
-                        // 1. Eredeti szótárépítés (Fix oszlopok: B, C, E)
                         Map<String, String> dictPhone = new HashMap<>();
+
+                        // =======================================================
+                        // 1. FEZ TELEFONOK (Egybeírt A oszlop szétvágása)
+                        // =======================================================
                         for (int r = 3; r <= 14; r++) {
                             Row topRow = sheet.getRow(r);
                             if (topRow == null) continue;
                             
-                            String letter = getCellValue(topRow.getCell(1)).toUpperCase(); // B oszlop
-                            String name = getCellValue(topRow.getCell(2)).toUpperCase();   // C oszlop
+                            // A oszlop (index: 0) - pl. "A KALAS LAJOS"
+                            String combinedNameCell = getCellValue(topRow.getCell(0)).trim(); 
+                            // D oszlop (index: 3) - Telefon
+                            String phone = getCellValue(topRow.getCell(3)).trim();      
                             
-                            String phone = "";
-                            for(int c = 4; c <= 10; c++) { // E oszloptól
-                                String val = getCellValue(topRow.getCell(c));
-                                if(!val.isEmpty()) { phone = val; break; }
-                            }
-                            
-                            if (!phone.isEmpty()) {
-                                if (!letter.isEmpty()) dictPhone.put(letter, phone);
-                                if (!name.isEmpty()) dictPhone.put(name, phone);
+                            if (!phone.isEmpty() && !combinedNameCell.isEmpty()) {
+                                // Megkeressük a legelső szóközt, hogy kettévágjuk a betűt és a nevet!
+                                int firstSpaceIndex = combinedNameCell.indexOf(' ');
+                                
+                                if (firstSpaceIndex > 0) {
+                                    String letter = combinedNameCell.substring(0, firstSpaceIndex);
+                                    String name = combinedNameCell.substring(firstSpaceIndex + 1);
+                                    
+                                    dictPhone.put(cleanTextForMatch(letter), phone);
+                                    dictPhone.put(cleanTextForMatch(name), phone);
+                                } else {
+                                    // Ha nincs szóköz, egyben mentjük el
+                                    dictPhone.put(cleanTextForMatch(combinedNameCell), phone);
+                                }
                             }
                         }
 
-                        // 2. Eredeti napi beosztás (Fix oszlopok: B, D)
+                        // =======================================================
+                        // 2. FEZ NAPI BEOSZTÁS ("+" jel kereső algoritmus)
+                        // =======================================================
                         for (int r = 16; r <= sheet.getLastRowNum(); r++) {
                             Row row = sheet.getRow(r);
                             if (row == null) continue;
 
-                            String dayStr = getCellValue(row.getCell(1)); // B oszlop
-                            String rawNameText = getCellValue(row.getCell(3)); // D oszlop
+                            String dayStr = getCellValue(row.getCell(0)); 
+                            String rawNameText = "";
+                            
+                            // Végigmegyünk a dátum melletti oszlopokon, és azt tekintjük névnek, amiben van "+" jel!
+                            for (int c = 1; c <= 5; c++) {
+                                String val = getCellValue(row.getCell(c)).trim();
+                                if (val.contains("+")) {
+                                    rawNameText = val;
+                                    break;
+                                }
+                            }
                             
                             if (dayStr.isEmpty() || rawNameText.isEmpty()) continue;
 
-                            // Napok tisztítása
-                            String dayNumberStr = dayStr;
-                            if (dayStr.contains(".")) dayNumberStr = dayStr.substring(0, dayStr.indexOf(".")).trim();
-                            else if (dayStr.contains(" ")) dayNumberStr = dayStr.substring(0, dayStr.indexOf(" ")).trim();
+                            String dayNumberStr = dayStr.replaceAll("[^0-9]", "");
 
                             try {
                                 int day = Integer.parseInt(dayNumberStr);
@@ -107,8 +121,9 @@ public class OnCallSyncService {
                                     String[] nameParts = rawNameText.split("\\+");
                                     
                                     for (int i = 0; i < nameParts.length; i++) {
-                                        String part = nameParts[i].trim().toUpperCase();
-                                        String foundPhone = dictPhone.getOrDefault(part, "Nincs adat");
+                                        String searchKey = cleanTextForMatch(nameParts[i]);
+                                        String foundPhone = dictPhone.getOrDefault(searchKey, "Nincs adat");
+                                        
                                         phonesBuilder.append(foundPhone);
                                         if (i < nameParts.length - 1) phonesBuilder.append(", ");
                                     }
@@ -120,11 +135,16 @@ public class OnCallSyncService {
                     }
                 }
             }
-            System.out.println("--- Eredeti Készenléti beolvasás kész! ---");
+            System.out.println("--- Ms-Sr-Fez beolvasás sikeresen befejeződött! ---");
         } catch (Exception e) {
-            System.err.println("!!! HIBA AZ EXCEL FELDOLGOZÁSAKOR !!!");
+            System.err.println("!!! HIBA A FEZ EXCEL FELDOLGOZÁSAKOR !!!");
             e.printStackTrace();
         }
+    }
+
+    private String cleanTextForMatch(String input) {
+        if (input == null) return "";
+        return input.replaceAll("[\\s\\u00A0]+", "").toUpperCase();
     }
 
     private void saveOrUpdateOnCall(LocalDate date, String names, String phones, String department) {

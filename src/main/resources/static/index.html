@@ -5,186 +5,351 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hálózati Felügyeleti Rendszer</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; }
-        
-        .add-device-form { background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
-        .add-device-form input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; flex: 1; }
-        .add-device-form button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .add-device-form button:hover { background-color: #218838; }
+        /* Alapvető beállítások */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f5f7; display: flex; height: 100vh; overflow: hidden; }
 
-        .search-bar { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #007bff; color: white; }
-        .status-online { color: green; font-weight: bold; }
-        .status-offline { color: red; font-weight: bold; }
+        /* OLDALSÁV (A Windows stílusú menü) */
+        .sidebar { width: 250px; background-color: #f3f3f3; border-right: 1px solid #dcdcdc; display: flex; flex-direction: column; padding-top: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.05); z-index: 10; }
+        .sidebar-title { font-size: 1.2em; font-weight: bold; padding: 0 20px 20px 20px; color: #333; border-bottom: 1px solid #ddd; margin-bottom: 10px; }
         
-        /* ÚJ: Ping gomb stílusa */
-        .ping-btn { background-color: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
-        .ping-btn:hover { background-color: #0056b3; }
+        .sidebar-item { padding: 12px 20px; cursor: pointer; color: #333; display: flex; align-items: center; gap: 12px; font-size: 15px; transition: 0.2s; border-left: 4px solid transparent; }
+        .sidebar-item:hover { background-color: #e5e5e5; }
+        .sidebar-item.active { background-color: #cce8ff; border-left: 4px solid #0078d7; font-weight: 600; }
+        
+        /* Ikonok a menüpontok mellé */
+        .icon { font-size: 1.2em; }
+
+        /* FŐ TARTALMI RÉSZ */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; background-color: #ffffff; }
+        .content-section { display: none; /* Alapértelmezetten elrejtve, a JS fogja kapcsolgatni */ animation: fadeIn 0.3s ease-in-out; }
+        .content-section.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Modulok közös stílusai (Űrlapok, Táblázatok) */
+        h2 { border-bottom: 2px solid #0078d7; padding-bottom: 10px; margin-bottom: 20px; color: #333; }
+        
+        .action-bar { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; border: 1px solid #ddd; }
+        .action-bar input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; flex: 1; }
+        .action-bar button { padding: 10px 15px; background-color: #0078d7; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .action-bar button:hover { background-color: #005a9e; }
+        .action-bar button.success { background-color: #28a745; }
+        .action-bar button.success:hover { background-color: #218838; }
+
+        .search-bar { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f0f0f0; color: #333; font-weight: 600; position: sticky; top: 0; }
+        tr:hover { background-color: #fcfcfc; }
+        
+        /* Státusz színek */
+        .status-online { color: #107c10; font-weight: bold; }
+        .status-offline { color: #d13438; font-weight: bold; }
+        .ping-btn { background-color: #0078d7; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
+        .ping-btn:hover { background-color: #005a9e; }
         .ping-btn:disabled { background-color: #cccccc; cursor: not-allowed; }
+
+        .handover-card { background: #fdfdfd; border: 1px solid #e1e4e8; padding: 15px; margin-bottom: 12px; border-radius: 6px; border-left: 5px solid #ffb900; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .handover-header { font-size: 0.85em; color: #555; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px; display: flex; justify-content: space-between; }
+        .handover-text { font-size: 1.05em; color: #222; white-space: pre-wrap; }
+        .handover-author { font-weight: bold; color: #0078d7; }
     </style>
 </head>
 <body>
 
-<div class="container">
+    <div class="sidebar">
 
-<div style="background-color: #ffeeba; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-        <h3>Készenléti Névsor Kereső</h3>
-        Nézd meg, ki az ügyeletes: 
-        <input type="date" id="onCallDate" onchange="checkOnCall()">
-        
-        <div id="onCallResult" style="margin-top: 10px; font-weight: bold; color: #856404;">
+        <div class="sidebar-title">Rendszerfelügyelet</div>
+          
+        <div class="sidebar-item" onclick="switchTab('handover', this)">
+            <span class="icon">📝</span> Szolgálat Átadás
+       
+        </div>
+        <div class="sidebar-item active" onclick="switchTab('devices', this)">
+            <span class="icon">🖥️</span> Aktív Eszközök
+        </div>
+        <div class="sidebar-item" onclick="switchTab('oncall', this)">
+            <span class="icon">📅</span> Készenléti Névsor
+        </div>
+        <div class="sidebar-item" onclick="switchTab('powersupply', this)">
+            <span class="icon">⚡</span> Áramellátás
+        </div>
+    </div>
+
+    <div class="main-content">
+
+            <div id="section-handover" class="content-section">
+                <h2>Szolgálat Átadás / Eseménynapló</h2>
+            
+            <div class="action-bar">
+                <input type="text" id="handoverAuthor" placeholder="Átadó neve (pl. Vincze József)" style="flex: 0.3;">
+                <input type="text" id="handoverMessage" placeholder="Események, megjegyzések, hibák a műszakban..." style="flex: 1;">
+                <button class="success" onclick="addNewHandover()">Mentés a Naplóba</button>
             </div>
+
+            <div id="handoverList" style="margin-top: 20px;"></div>
+        </div>
+
+        <div id="section-devices" class="content-section active">
+            <h2>Aktív Eszközök Felügyelete (Ping)</h2>
+            
+            <div class="action-bar">
+                <input type="text" id="newName" placeholder="Eszköz neve (pl. Miskolc Főkapcsoló)" required>
+                <input type="text" id="newIp" placeholder="IP Cím (pl. 192.168.1.50)" required>
+                <button class="success" onclick="addNewDevice()">+ Új Eszköz</button>
+            </div>
+
+            <input type="text" id="deviceSearchInput" class="search-bar" onkeyup="filterTable('deviceSearchInput', 'deviceTable')" placeholder="Keresés név, IP vagy státusz alapján...">
+
+            <table id="deviceTable">
+                <thead>
+                    <tr>
+                        <th>Eszköz neve</th>
+                        <th>IP Cím</th>
+                        <th>Státusz</th>
+                        <th>Utolsó ellenőrzés</th>
+                        <th>Műveletek</th>
+                    </tr>
+                </thead>
+                <tbody id="deviceTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="section-oncall" class="content-section">
+            <h2>Készenléti Névsor</h2>
+            
+            <div class="action-bar" style="background-color: #fff3cd; border-color: #ffeeba;">
+                <label for="onCallDate" style="font-weight: bold; color: #856404;">Válassz dátumot:</label>
+                <input type="date" id="onCallDate" onchange="checkOnCall()">
+            </div>
+            
+            <div id="onCallResult" style="margin-top: 20px; font-size: 1.2em; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 5px solid #0078d7;">
+                <i>Kérlek, válassz egy dátumot a kereséshez.</i>
+            </div>
+        </div>
+
+        <div id="section-powersupply" class="content-section">
+            <h2>Áramellátás és Akkumulátor Mérések</h2>
+            
+            <input type="text" id="psSearchInput" class="search-bar" onkeyup="filterTable('psSearchInput', 'psTable')" placeholder="Keresés helyszín, elhelyezés vagy típus alapján...">
+
+            <table id="psTable">
+                <thead>
+                    <tr>
+                        <th>Helyszín</th>
+                        <th>Elhelyezés</th>
+                        <th>Dátum</th>
+                        <th>Készítette</th>
+                        <th>Töltő típus</th>
+                        <th>Akkumulátor</th>
+                        <th>Feszültség</th>
+                        <th>Kapacitás</th>
+                        <th>Üzembe helyezve</th>
+                        <th>Környezet</th>
+                    </tr>
+                </thead>
+                <tbody id="psTableBody"></tbody>
+            </table>
+        </div>
+
     </div>
 
-    <h1>Aktív Eszközök Felügyelete</h1>
-    
-    <div class="add-device-form">
-        <input type="text" id="newName" placeholder="Eszköz neve (pl. Miskolc Főkapcsoló)" required>
-        <input type="text" id="newIp" placeholder="IP Cím (pl. 192.168.1.50)" required>
-        <button onclick="addNewDevice()">Hozzáadás</button>
-    </div>
+    <script>
 
-    <input type="text" id="searchInput" class="search-bar" onkeyup="filterTable()" placeholder="Keresés név, IP vagy státusz alapján...">
-
-    <table id="deviceTable">
-        <thead>
-            <tr>
-                <th>Eszköz neve</th>
-                <th>IP Cím</th>
-                <th>Státusz</th>
-                <th>Utolsó ellenőrzés</th>
-                <th>Műveletek</th> </tr>
-        </thead>
-        <tbody id="tableBody">
-            </tbody>
-    </table>
-</div>
-
-<script>
-    async function addNewDevice() {
-        const nameInput = document.getElementById('newName');
-        const ipInput = document.getElementById('newIp');
-        const name = nameInput.value.trim();
-        const ip = ipInput.value.trim();
-
-        if (!name || !ip) {
-            alert("Kérlek, töltsd ki a nevet és az IP címet is!");
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/devices', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: name, ipAddress: ip })
-            });
-
-            if (response.ok) {
-                nameInput.value = '';
-                ipInput.value = '';
-                fetchDevices(); 
-            } else {
-                alert("Hiba történt az eszköz mentésekor.");
-            }
-        } catch (error) {
-            console.error('Hálózati hiba:', error);
-        }
-    }
-
-    async function checkOnCall() {
-        const dateInput = document.getElementById('onCallDate').value;
-        const resultDiv = document.getElementById('onCallResult');
-        
-        if (!dateInput) return;
-
-        try {
-            const response = await fetch(`/api/oncall/${dateInput}`);
-            if (response.ok) {
+        async function fetchHandovers() {
+            try {
+                const response = await fetch('/api/handover');
                 const data = await response.json();
-                resultDiv.innerHTML = `✅ ${data.date}: <br> Név: ${data.names} <br> Telefon: ${data.phones}`;
-            } else {
-                resultDiv.innerHTML = `❌ Erre a napra (${dateInput}) nincs rögzítve készenlétes.`;
+                const listDiv = document.getElementById('handoverList');
+                listDiv.innerHTML = ''; 
+
+                if (data.length === 0) {
+                    listDiv.innerHTML = '<i>Még nincs bejegyzés a naplóban.</i>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const dateStr = new Date(item.timestamp).toLocaleString('hu-HU');
+                    
+                    const card = document.createElement('div');
+                    card.className = 'handover-card';
+                    card.innerHTML = `
+                        <div class="handover-header">
+                            <span class="handover-author">👤 ${item.author}</span>
+                            <span>🕒 ${dateStr}</span>
+                        </div>
+                        <div class="handover-text">${item.message}</div>
+                    `;
+                    listDiv.appendChild(card);
+                });
+            } catch (error) { console.error('Hiba a napló betöltésekor:', error); }
+        }
+
+        async function addNewHandover() {
+            const authorInput = document.getElementById('handoverAuthor');
+            const messageInput = document.getElementById('handoverMessage');
+            
+            if (!authorInput.value || !messageInput.value) { 
+                alert("Kérlek, töltsd ki a neved és az üzenetet is!"); 
+                return; 
             }
-        } catch (error) {
-            console.error('Hiba a készenlét lekérdezésekor:', error);
+
+            try {
+                const response = await fetch('/api/handover', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        author: authorInput.value.trim(), 
+                        message: messageInput.value.trim() 
+                    })
+                });
+                
+                if (response.ok) { 
+                    messageInput.value = ''; // Csak az üzenetet töröljük, a név maradhat a következő bejegyzéshez!
+                    fetchHandovers(); 
+                } 
+            } catch (error) { console.error('Hiba a mentéskor:', error); }
         }
-    }
 
-
-
-    // ÚJ: Soron kívüli pingelés funkció
-    async function forcePing(id, buttonElement) {
-        // Gomb inaktiválása, amíg tart a ping (max 3 mp)
-        buttonElement.disabled = true;
-        buttonElement.innerText = "Pingelés...";
-
-        try {
-            const response = await fetch(`/api/devices/${id}/ping`, { method: 'POST' });
-            if (response.ok) {
-                fetchDevices(); // Táblázat frissítése, ha megjött az eredmény
-            } else {
-                alert("Hiba történt az eszköz pingelésekor.");
-            }
-        } catch (error) {
-            console.error('Hálózati hiba:', error);
-        } finally {
-            // Gomb visszaállítása
-            buttonElement.disabled = false;
-            buttonElement.innerText = "Kézi Ping";
+        // Oldal betöltésekor ezt is le kell kérni (add hozzá a legalsó sorokhoz)
+        fetchHandovers();
+        // --- 1. Felületvezérlő (Fülek váltása) ---
+        function switchTab(tabId, element) {
+            // Minden szekció elrejtése
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            // Minden menüpontról levesszük a kijelölést
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            
+            // Az adott szekció megjelenítése
+            document.getElementById('section-' + tabId).classList.add('active');
+            // A kattintott menüpont kiemelése
+            element.classList.add('active');
         }
-    }
 
-    async function fetchDevices() {
-        try {
-            const response = await fetch('/api/devices');
-            const devices = await response.json();
-            const tableBody = document.getElementById('tableBody');
-            tableBody.innerHTML = ''; 
-
-            devices.forEach(device => {
-                const row = document.createElement('tr');
-                const statusClass = device.alive ? 'status-online' : 'status-offline';
-                const statusText = device.alive ? 'Online' : 'Offline';
-                const lastChecked = device.lastChecked ? new Date(device.lastChecked).toLocaleTimeString('hu-HU') : 'Folyamatban...';
-
-                // Új: Gomb hozzáadása a sor végéhez
-                row.innerHTML = `
-                    <td>${device.name}</td>
-                    <td>${device.ipAddress}</td>
-                    <td class="${statusClass}">${statusText}</td>
-                    <td>${lastChecked}</td>
-                    <td><button class="ping-btn" onclick="forcePing(${device.id}, this)">Kézi Ping</button></td>
-                `;
-                tableBody.appendChild(row);
-            });
-        } catch (error) {
-            console.error('Hiba az adatok lekérésekor:', error);
-        }
-    }
-
-    function filterTable() {
-        const input = document.getElementById("searchInput");
-        const filter = input.value.toLowerCase();
-        const table = document.getElementById("deviceTable");
-        const tr = table.getElementsByTagName("tr");
-
-        for (let i = 1; i < tr.length; i++) {
-            let rowText = tr[i].textContent || tr[i].innerText;
-            if (rowText.toLowerCase().indexOf(filter) > -1) {
-                tr[i].style.display = "";
-            } else {
-                tr[i].style.display = "none";
+        // Általános táblázat szűrő
+        function filterTable(inputId, tableId) {
+            const filter = document.getElementById(inputId).value.toLowerCase();
+            const tr = document.getElementById(tableId).getElementsByTagName("tr");
+            for (let i = 1; i < tr.length; i++) {
+                let rowText = tr[i].textContent || tr[i].innerText;
+                tr[i].style.display = rowText.toLowerCase().indexOf(filter) > -1 ? "" : "none";
             }
         }
-    }
 
-    fetchDevices();
-    setInterval(fetchDevices, 10000);
-</script>
+        // --- 2. IP Eszközök Logika ---
+        async function fetchDevices() {
+            try {
+                const response = await fetch('/api/devices');
+                const devices = await response.json();
+                const tableBody = document.getElementById('deviceTableBody');
+                tableBody.innerHTML = ''; 
 
+                devices.forEach(device => {
+                    const row = document.createElement('tr');
+                    const statusClass = device.alive ? 'status-online' : 'status-offline';
+                    const statusText = device.alive ? 'Online' : 'Offline';
+                    const lastChecked = device.lastChecked ? new Date(device.lastChecked).toLocaleTimeString('hu-HU') : 'Folyamatban...';
+
+                    row.innerHTML = `
+                        <td>${device.name}</td>
+                        <td>${device.ipAddress}</td>
+                        <td class="${statusClass}">${statusText}</td>
+                        <td>${lastChecked}</td>
+                        <td><button class="ping-btn" onclick="forcePing(${device.id}, this)">Kézi Ping</button></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                // ÚJ SOR: Újraalkalmazzuk a szűrőt az újonnan legenerált sorokra!
+                filterTable('deviceSearchInput', 'deviceTable');
+
+            } catch (error) { console.error('Hiba:', error); }
+        }
+
+        async function addNewDevice() {
+            const nameInput = document.getElementById('newName');
+            const ipInput = document.getElementById('newIp');
+            if (!nameInput.value || !ipInput.value) { alert("Töltsd ki az adatokat!"); return; }
+            try {
+                const response = await fetch('/api/devices', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: nameInput.value.trim(), ipAddress: ipInput.value.trim() })
+                });
+                if (response.ok) { nameInput.value = ''; ipInput.value = ''; fetchDevices(); } 
+            } catch (error) { console.error('Hiba:', error); }
+        }
+
+        async function forcePing(id, btn) {
+            btn.disabled = true; btn.innerText = "Ping...";
+            try {
+                await fetch(`/api/devices/${id}/ping`, { method: 'POST' });
+                fetchDevices(); 
+            } finally {
+                btn.disabled = false; btn.innerText = "Kézi Ping";
+            }
+        }
+
+       async function checkOnCall() {
+            const dateInput = document.getElementById('onCallDate').value;
+            const resultDiv = document.getElementById('onCallResult');
+            if (!dateInput) return;
+
+            try {
+                const response = await fetch(`/api/oncall/${dateInput}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    let html = `<h3 style="color: #107c10; margin-bottom: 15px;">✅ Dátum: ${dateInput}</h3>`;
+                    
+                    // Végigmegyünk a kapott listán (Üzemfelügyelet, Ms-Sr-Fez, stb.)
+                    data.forEach(oc => {
+                        html += `
+                        <div style="background: #ffffff; padding: 15px; border: 1px solid #ddd; border-left: 5px solid #0078d7; margin-bottom: 12px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <h4 style="margin-bottom: 8px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px;">🏢 Részleg: ${oc.department}</h4>
+                            <strong>Ügyeletes(ek):</strong> <span style="font-size:1.1em; color: #222;">${oc.names}</span><br><br>
+                            <strong>Elérhetőség:</strong> ${oc.phones}
+                        </div>`;
+                    });
+                    
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `<h3 style="color: #d13438;">❌ Erre a napra (${dateInput}) nincs rögzítve készenlétes.</h3>`;
+                }
+            } catch (error) { console.error('Hiba:', error); }
+        }
+        // --- 4. Áramellátás Logika ---
+        async function fetchPowerSupplies() {
+            try {
+                const response = await fetch('/api/powersupply');
+                const data = await response.json();
+                const tableBody = document.getElementById('psTableBody');
+                tableBody.innerHTML = ''; 
+
+                data.forEach(ps => {
+                    const row = document.createElement('tr');
+                   row.innerHTML = `
+                        <td><strong>${ps.location}</strong></td>
+                        <td style="color: #555;">${ps.exactLocation}</td>
+                        <td>${ps.measurementDate}</td>
+                        <td>${ps.measuredBy}</td>
+                        <td>${ps.chargerType}</td>
+                        <td>${ps.batteryType}</td>
+                        <td><b>${ps.groupVoltage}</b></td>
+                        <td>${ps.capacity}</td>
+                        <td>${ps.installedDate}</td> <td>${ps.temperature}</td> `
+                        ;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) { console.error('Hiba:', error); }
+        }
+
+        // Indításkor betöltjük a táblázatokat
+        fetchDevices();
+        setInterval(fetchDevices, 10000); // 10 mp-es auto-frissítés az IP-kre
+        fetchPowerSupplies();
+    </script>
 </body>
 </html>

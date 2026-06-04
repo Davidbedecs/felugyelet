@@ -14,20 +14,22 @@ public class OnCall {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDate date; // A pontos dátum (pl. 2026-05-31)
+    private LocalDate date;
+    private String names;
+    private String phones;
     
-    private String names; // A készenlétesek nevei (pl. "Gombos Péter, Varga Zsolt, Komlósi István")
-    private String phones; // A hozzájuk tartozó telefonszámok
+    // ÚJ MEZŐ: Részleg azonosítására
+    private String department; 
 
     public OnCall() {}
 
-    public OnCall(LocalDate date, String names, String phones) {
+    public OnCall(LocalDate date, String names, String phones, String department) {
         this.date = date;
         this.names = names;
         this.phones = phones;
+        this.department = department;
     }
 
-    // Getterek és Setterek
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public LocalDate getDate() { return date; }
@@ -36,4 +38,6 @@ public class OnCall {
     public void setNames(String names) { this.names = names; }
     public String getPhones() { return phones; }
     public void setPhones(String phones) { this.phones = phones; }
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
 }
