@@ -9,6 +9,6 @@ import com.monitoring.model.Handover;
 
 @Repository
 public interface HandoverRepository extends JpaRepository<Handover, Long> {
-    // A legújabb bejegyzések listázása legfelülre
+   
     List<Handover> findAllByOrderByTimestampDesc();
 }

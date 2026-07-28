@@ -10,7 +10,7 @@ import com.monitoring.model.PowerSupply;
 
 @Repository
 public interface PowerSupplyRepository extends JpaRepository<PowerSupply, Long> {
-    // Megkeresi, hogy az adott helyszínen, az adott napon van-e már rögzítve mérés
+   
     Optional<PowerSupply> findByLocationAndExactLocationAndMeasurementDate(
             String location, String exactLocation, LocalDate measurementDate);
 }

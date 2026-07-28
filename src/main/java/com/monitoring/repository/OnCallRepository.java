@@ -11,9 +11,9 @@ import com.monitoring.model.OnCall;
 
 @Repository
 public interface OnCallRepository extends JpaRepository<OnCall, Long> {
-    // Frissítéshez: Dátum és Részleg alapján keres
+    
     Optional<OnCall> findByDateAndDepartment(LocalDate date, String department);
     
-    // Weblaphoz: Lekéri az összes részleg ügyeletesét egy adott napon
+   
     List<OnCall> findAllByDate(LocalDate date);
 }

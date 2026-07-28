@@ -15,11 +15,11 @@ public class Handover {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDateTime timestamp; // Mikor írták
-    private String author;           // Ki írta a bejegyzést
+    private LocalDateTime timestamp; 
+    private String author;           
 
-    @Column(columnDefinition = "TEXT") // Hosszabb szöveg is elférjen
-    private String message;          // Maga a műszakátadó szöveg
+    @Column(columnDefinition = "TEXT") 
+    private String message;         
 
     public Handover() {}
 

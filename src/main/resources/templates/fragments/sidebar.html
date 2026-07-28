@@ -1,0 +1,17 @@
+<!-- src/main/resources/templates/fragments/sidebar.html -->
+<div th:fragment="oldalso-menu" class="sidebar">
+    <div class="sidebar-title">Rendszerfelügyelet</div>
+      
+    <div class="sidebar-item" onclick="switchTab('handover', this)">
+        <span class="icon">📝</span> Szolgálat Átadás
+    </div>
+    <div class="sidebar-item active" onclick="switchTab('devices', this)">
+        <span class="icon">🖥️</span> Aktív Eszközök
+    </div>
+    <div class="sidebar-item" onclick="switchTab('oncall', this)">
+        <span class="icon">📅</span> Készenléti Névsor
+    </div>
+    <div class="sidebar-item" onclick="switchTab('powersupply', this)">
+        <span class="icon">⚡</span> Áramellátás
+    </div>
+</div>

@@ -22,13 +22,13 @@ public class DeviceController {
         this.monitoringService = monitoringService;
     }
 
-    // A meglévő lekérdező végpont (GET)
+    
     @GetMapping
     public List<Device> getDevices() {
         return monitoringService.getAllDevices();
     }
 
-    // AZ ÚJ VÉGPONT: Eszköz hozzáadása (POST)
+
     @PostMapping
     public Device addDevice(@RequestBody Device newDevice) {
         return monitoringService.addDevice(newDevice);

@@ -14,18 +14,18 @@ public class PowerSupply {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String location; // A: Helyszín
-    private String exactLocation; // B: Pontos elhelyezés
-    private LocalDate measurementDate; // C, D, E: Mérési dátum összerakva
-    private String measuredBy; // F: Mérést készített
-    private String chargerType; // G: Töltő típus
-    private String batteryGroup; // H: Telep csoport
-    private String groupVoltage; // I: Csoport feszültség
-    private String batteryType; // J: Akkumulátor típus
-    private String capacity; // K: Kapacitás
-    private String installedDate; // L: Üzembe helyezve
-    private String temperature; // M: Környezeti hőmérséklet
-    private String instrument; // N: Mérőműszer típusa
+    private String location; 
+    private String exactLocation; 
+    private LocalDate measurementDate; 
+    private String measuredBy; 
+    private String chargerType; 
+    private String batteryGroup; 
+    private String groupVoltage; 
+    private String batteryType; 
+    private String capacity; 
+    private String installedDate; 
+    private String temperature; 
+    private String instrument; 
 
     public PowerSupply() {}
 

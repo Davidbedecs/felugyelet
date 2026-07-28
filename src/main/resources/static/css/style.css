@@ -1,0 +1,52 @@
+/* src/main/resources/static/css/style.css */
+
+/* Alapvető beállítások */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f5f7; display: flex; height: 100vh; overflow: hidden; }
+
+/* OLDALSÁV (A Windows stílusú menü) */
+.sidebar { width: 250px; background-color: #f3f3f3; border-right: 1px solid #dcdcdc; display: flex; flex-direction: column; padding-top: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.05); z-index: 10; }
+.sidebar-title { font-size: 1.2em; font-weight: bold; padding: 0 20px 20px 20px; color: #333; border-bottom: 1px solid #ddd; margin-bottom: 10px; }
+
+.sidebar-item { padding: 12px 20px; cursor: pointer; color: #333; display: flex; align-items: center; gap: 12px; font-size: 15px; transition: 0.2s; border-left: 4px solid transparent; }
+.sidebar-item:hover { background-color: #e5e5e5; }
+.sidebar-item.active { background-color: #cce8ff; border-left: 4px solid #0078d7; font-weight: 600; }
+
+/* Ikonok a menüpontok mellé */
+.icon { font-size: 1.2em; }
+
+/* FŐ TARTALMI RÉSZ */
+.main-content { flex: 1; padding: 30px; overflow-y: auto; background-color: #ffffff; }
+.content-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+.content-section.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Modulok közös stílusai (Űrlapok, Táblázatok) */
+h2 { border-bottom: 2px solid #0078d7; padding-bottom: 10px; margin-bottom: 20px; color: #333; }
+
+.action-bar { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; border: 1px solid #ddd; }
+.action-bar input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; flex: 1; }
+.action-bar button { padding: 10px 15px; background-color: #0078d7; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.action-bar button:hover { background-color: #005a9e; }
+.action-bar button.success { background-color: #28a745; }
+.action-bar button.success:hover { background-color: #218838; }
+
+.search-bar { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+th { background-color: #f0f0f0; color: #333; font-weight: 600; position: sticky; top: 0; }
+tr:hover { background-color: #fcfcfc; }
+
+/* Státusz színek */
+.status-online { color: #107c10; font-weight: bold; }
+.status-offline { color: #d13438; font-weight: bold; }
+.ping-btn { background-color: #0078d7; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
+.ping-btn:hover { background-color: #005a9e; }
+.ping-btn:disabled { background-color: #cccccc; cursor: not-allowed; }
+
+.handover-card { background: #fdfdfd; border: 1px solid #e1e4e8; padding: 15px; margin-bottom: 12px; border-radius: 6px; border-left: 5px solid #ffb900; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.handover-header { font-size: 0.85em; color: #555; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px; display: flex; justify-content: space-between; }
+.handover-text { font-size: 1.05em; color: #222; white-space: pre-wrap; }
+.handover-author { font-weight: bold; color: #0078d7; }

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hálózati Felügyeleti Rendszer</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- === ITT HÍVJUK BE A KÜLÖNÁLLÓ MENÜT A FRAGMENTSBŐL === -->
+    <div th:replace="~{fragments/sidebar :: oldalso-menu}"></div>
+
+    <div class="main-content">
+
+        <div id="section-handover" class="content-section">
+            <h2>Szolgálat Átadás / Eseménynapló</h2>
+            
+            <div class="action-bar">
+                <input type="text" id="handoverAuthor" placeholder="Átadó neve (pl. Vincze József)" style="flex: 0.3;">
+                <input type="text" id="handoverMessage" placeholder="Események, megjegyzések, hibák a műszakban..." style="flex: 1;">
+                <button class="success" onclick="addNewHandover()">Mentés a Naplóba</button>
+            </div>
+
+            <div id="handoverList" style="margin-top: 20px;"></div>
+        </div>
+
+        <div id="section-devices" class="content-section active">
+            <h2>Aktív Eszközök Felügyelete (Ping)</h2>
+            
+            <div class="action-bar">
+                <input type="text" id="newName" placeholder="Eszköz neve (pl. Miskolc Főkapcsoló)" required>
+                <input type="text" id="newIp" placeholder="IP Cím (pl. 192.168.1.50)" required>
+                <button class="success" onclick="addNewDevice()">+ Új Eszköz</button>
+            </div>
+
+            <input type="text" id="deviceSearchInput" class="search-bar" onkeyup="filterTable('deviceSearchInput', 'deviceTable')" placeholder="Keresés név, IP vagy státusz alapján...">
+
+            <table id="deviceTable">
+                <thead>
+                    <tr>
+                        <th>Eszköz neve</th>
+                        <th>IP Cím</th>
+                        <th>Státusz</th>
+                        <th>Utolsó ellenőrzés</th>
+                        <th>Műveletek</th>
+                    </tr>
+                </thead>
+                <tbody id="deviceTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="section-oncall" class="content-section">
+            <h2>Készenléti Névsor</h2>
+            
+            <div class="action-bar" style="background-color: #fff3cd; border-color: #ffeeba;">
+                <label for="onCallDate" style="font-weight: bold; color: #856404;">Válassz dátumot:</label>
+                <input type="date" id="onCallDate" onchange="checkOnCall()">
+            </div>
+            
+            <div id="onCallResult" style="margin-top: 20px; font-size: 1.2em; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 5px solid #0078d7;">
+                <i>Kérlek, válassz egy dátumot a kereséshez.</i>
+            </div>
+        </div>
+
+        <div id="section-powersupply" class="content-section">
+            <h2>Áramellátás és Akkumulátor Mérések</h2>
+            
+            <input type="text" id="psSearchInput" class="search-bar" onkeyup="filterTable('psSearchInput', 'psTable')" placeholder="Keresés helyszín, elhelyezés vagy típus alapján...">
+
+            <table id="psTable">
+                <thead>
+                    <tr>
+                        <th>Helyszín</th>
+                        <th>Elhelyezés</th>
+                        <th>Dátum</th>
+                        <th>Készítette</th>
+                        <th>Töltő típus</th>
+                        <th>Akkumulátor</th>
+                        <th>Feszültség</th>
+                        <th>Kapacitás</th>
+                        <th>Üzembe helyezve</th>
+                        <th>Környezet</th>
+                    </tr>
+                </thead>
+                <tbody id="psTableBody"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+   <!-- A modern, moduláris JS behívása -->
+    <script type="module" src="/js/app.js"></script>
+</body>
+</html>
+</body>
+</html>

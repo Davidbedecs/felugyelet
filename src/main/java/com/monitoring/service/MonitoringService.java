@@ -15,12 +15,12 @@ public class MonitoringService {
 
     private final DeviceRepository deviceRepository;
 
-    // Adatbázis kapcsolat bekötése
+   
     public MonitoringService(DeviceRepository deviceRepository) {
         this.deviceRepository = deviceRepository;
     }
 
-    // A Controller ezt hívja meg, hogy átadja az adatokat a weblapnak
+    
     public List<Device> getAllDevices() {
         return deviceRepository.findAll();
     }
@@ -69,7 +69,6 @@ public class MonitoringService {
             device.setLastChecked(LocalDateTime.now());
         }
         
-        // Elmentjük a friss állapotot
         return deviceRepository.save(device);
     }
 }

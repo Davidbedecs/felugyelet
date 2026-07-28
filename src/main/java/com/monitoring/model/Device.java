@@ -1,21 +1,25 @@
 package com.monitoring.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 @Entity
 public class Device {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // Az ID immár szám alapú (Long), és az adatbázis generálja automatikusan
+    private Long id; 
 
     private String name;
     private String ipAddress;
     private boolean isAlive;
     private LocalDateTime lastChecked;
 
-    // A JPA (Hibernate) miatt KÖTELEZŐ egy paraméter nélküli üres konstruktor
+   
     public Device() {
     }
 
@@ -25,7 +29,7 @@ public class Device {
         this.isAlive = false;
     }
 
-    // Getterek és Setterek
+   
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     

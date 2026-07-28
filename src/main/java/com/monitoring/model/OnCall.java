@@ -18,7 +18,7 @@ public class OnCall {
     private String names;
     private String phones;
     
-    // ÚJ MEZŐ: Részleg azonosítására
+    
     private String department; 
 
     public OnCall() {}
