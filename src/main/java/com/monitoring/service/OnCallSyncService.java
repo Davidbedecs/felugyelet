@@ -41,7 +41,7 @@ public class OnCallSyncService {
                 String filename = resource.getFilename();
                 if (filename == null || filename.startsWith("~$")) continue;
 
-                // BIZTONSÁGI VÉDELEM: Átugorjuk a problémás másik fájlt
+                
                 if (filename.toLowerCase().contains("ms-sr-fez")) {
                     System.out.println("-> " + filename + " átugrása (csak az eredeti táblázatot olvassuk)");
                     continue;
@@ -83,17 +83,17 @@ public class OnCallSyncService {
                             }
                         }
 
-                        // 2. Eredeti napi beosztás (Fix oszlopok: B, D)
+                        
                         for (int r = 16; r <= sheet.getLastRowNum(); r++) {
                             Row row = sheet.getRow(r);
                             if (row == null) continue;
 
-                            String dayStr = getCellValue(row.getCell(1)); // B oszlop
-                            String rawNameText = getCellValue(row.getCell(3)); // D oszlop
+                            String dayStr = getCellValue(row.getCell(1)); 
+                            String rawNameText = getCellValue(row.getCell(3)); 
                             
                             if (dayStr.isEmpty() || rawNameText.isEmpty()) continue;
 
-                            // Napok tisztítása
+                            
                             String dayNumberStr = dayStr;
                             if (dayStr.contains(".")) dayNumberStr = dayStr.substring(0, dayStr.indexOf(".")).trim();
                             else if (dayStr.contains(" ")) dayNumberStr = dayStr.substring(0, dayStr.indexOf(" ")).trim();

@@ -7,5 +7,5 @@ import com.monitoring.model.Device;
 
 @Repository
 public interface DeviceRepository extends JpaRepository<Device, Long> {
-    
+    boolean existsByIpAddress(String ipAddress);
 }

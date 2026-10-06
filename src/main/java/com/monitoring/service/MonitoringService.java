@@ -25,10 +25,9 @@ public class MonitoringService {
         return deviceRepository.findAll();
     }
 
-    // A pingelő időzítő (30 másodpercenként)
     @Scheduled(fixedRate = 30000)
     public void checkDevices() {
-        // 1. Lekérjük az összes eszközt a MySQL-ből
+        
         List<Device> devices = deviceRepository.findAll();
         
         for (Device device : devices) {
@@ -42,7 +41,7 @@ public class MonitoringService {
                 device.setLastChecked(LocalDateTime.now());
             }
             
-            // 2. A frissített (online/offline) állapotot visszamentjük az adatbázisba
+        
             deviceRepository.save(device);
         }
     }
@@ -53,9 +52,9 @@ public class MonitoringService {
         return deviceRepository.save(device);
     }
 
-    // Egyedi eszköz soron kívüli pingelése
+    
     public Device pingSingleDevice(Long id) {
-        // Megkeressük az eszközt az adatbázisban az ID alapján
+        
         Device device = deviceRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Eszköz nem található az adatbázisban: " + id));
 
@@ -71,4 +70,7 @@ public class MonitoringService {
         
         return deviceRepository.save(device);
     }
+    public boolean existsByIpAddress(String ipAddress) {
+    return deviceRepository.existsByIpAddress(ipAddress);
+}
 }

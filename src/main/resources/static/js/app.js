@@ -21,12 +21,29 @@ window.addNewHandover = async () => {
 window.addNewDevice = async () => {
     const nameInput = document.getElementById('newName');
     const ipInput = document.getElementById('newIp');
-    if (!nameInput.value || !ipInput.value) { alert("Töltsd ki az adatokat!"); return; }
+    
+    if (!nameInput.value || !ipInput.value) { 
+        alert("Töltsd ki az adatokat!"); 
+        return; 
+    }
     
     try {
         const res = await Api.saveDevice(nameInput.value.trim(), ipInput.value.trim());
-        if (res.ok) { nameInput.value = ''; ipInput.value = ''; loadDevices(); }
-    } catch (e) { console.error(e); }
+        
+        if (res.ok) { 
+            // 1. ESET: Minden rendben (200 OK)
+            nameInput.value = ''; 
+            ipInput.value = ''; 
+            loadDevices(); 
+        } else {
+            // 2. ESET: A Java hibát küldött (pl. 400 Bad Request az IP formátum miatt)
+            const errorMessage = await res.text(); // Kiolvassuk a Java szövegét
+            alert(errorMessage); // Feldobjuk a piros hibaüzenetet a diszpécsernek!
+        }
+    } catch (e) { 
+        console.error("Hálózati hiba történt:", e); 
+        alert("Hiba történt a szerverrel való kommunikáció során!");
+    }
 };
 
 window.forcePing = async (id, btn) => {
